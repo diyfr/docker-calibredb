@@ -1,20 +1,15 @@
 # Use an Alpine linux base image with GNU libc (aka glibc) pre-installed, courtesy of Vlad Frolov
 FROM frolvlad/alpine-glibc
 
-MAINTAINER jakbutler
-
 #########################################
 ##        ENVIRONMENTAL CONFIG         ##
 #########################################
 # Calibre environment variables
-ENV CALIBRE_LIBRARY_DIRECTORY=/opt/calibredb/library
-ENV CALIBRE_CONFIG_DIRECTORY=/opt/calibredb/config
-
-# Auto-import directory
-ENV CALIBREDB_IMPORT_DIRECTORY=/opt/calibredb/import
-
-# Flag for automatically updating to the latest version on startup
-ENV AUTO_UPDATE=0
+ENV \
+	CALIBRE_LIBRARY_DIRECTORY=/opt/calibredb/library \
+	CALIBRE_CONFIG_DIRECTORY=/opt/calibredb/config \
+	CALIBREDB_IMPORT_DIRECTORY=/opt/calibredb/import \
+	AUTO_UPDATE=0
 
 #########################################
 ##         DEPENDENCY INSTALL          ##
@@ -23,7 +18,7 @@ RUN apk update && \
     apk add --no-cache --upgrade \
     bash \
     ca-certificates \
-    python \
+    python3 \
     wget \
     gcc \
     mesa-gl \
@@ -31,10 +26,19 @@ RUN apk update && \
     qt5-qtbase-x11 \
     xdg-utils \
     xz && \
+    update-ca-certificates 2>/dev/null || true && \
+    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
+    \
+    echo "**** install pip ****" && \
+    python -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
+    pip install --no-cache --upgrade pip setuptools wheel
 #########################################
 ##            APP INSTALL              ##
 #########################################
-    wget -O- https://raw.githubusercontent.com/kovidgoyal/calibre/master/setup/linux-installer.py | python -c "import sys; main=lambda:sys.stderr.write('Download failed\n'); exec(sys.stdin.read()); main(install_dir='/opt', isolated=True)" && \
+
+RUN wget -O- https://raw.githubusercontent.com/kovidgoyal/calibre/master/setup/linux-installer.py | python -c "import sys; main=lambda:sys.stderr.write('Download failed\n'); exec(sys.stdin.read()); main(install_dir='/opt', isolated=True)" && \
     rm -rf /tmp/calibre-installer-cache
 
 #########################################
