@@ -6,7 +6,7 @@ if [ ! "$AUTO_UPDATE" = "1" ]; then
   echo "AUTO_UPDATE not requested, keeping installed version of $my_version."
 else
   echo "AUTO_UPDATE requested, checking for latest version..."
-  latest_version=`wget -q -O- https://raw.githubusercontent.com/kovidgoyal/calibre/master/Changelog.yaml | grep -m 1 "^- version:" | awk '{print $3}'`
+  latest_version=`wget -q -O- https://raw.githubusercontent.com/kovidgoyal/calibre/master/Changelog.txt | grep -m 1 "^{{{ " | awk '{print $2}'`
   if [ "$my_version" != "$latest_version" ]
   then
     echo "Updating from $my_version to $latest_version."
